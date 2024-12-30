@@ -10,13 +10,17 @@ public class RayTracerManager : MonoBehaviour
 
     Material material;
 
+    ComputeBuffer sphereBuffer;
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         Camera cam = Camera.current;
 
         if (cam.name != "SceneCamera" || useShaderInSceneView)
         {
+
             ShaderHelper.InitMaterial(selectedShader, ref material); // Set up the material with the ray tracing shader.
+            CreateSpheres();
+
             // Calculate the near plane (Projektionsfläche) based on de FOV and distance.
             float nearClipPlane = cam.nearClipPlane; // Distance of the cam to the near plane
             float nearPlaneHeight = nearClipPlane * Tan(cam.fieldOfView * 0.5f * Deg2Rad) * 2; // Height of the near plane
@@ -44,5 +48,27 @@ public class RayTracerManager : MonoBehaviour
             Graphics.Blit(source, destination);
         }
     }
+
+    void CreateSpheres()
+    {
+        RayTracedSphere[] sphereObjects = FindObjectsByType<RayTracedSphere>(FindObjectsSortMode.None);
+        Sphere[] spheres = new Sphere[sphereObjects.Length];
+
+        for (int i = 0; i < sphereObjects.Length; i++)
+        {
+            spheres[i] = new Sphere()
+            {
+                center = sphereObjects[i].transform.position,
+                radius = sphereObjects[i].transform.localScale.x * 0.5f,
+                material = sphereObjects[i].material
+            };
+        }
+
+        // Create buffer containing all sphere data, and send it to the shader
+        ShaderHelper.CreateStructuredBuffer(ref sphereBuffer, spheres);
+        material.SetBuffer("Spheres", sphereBuffer);
+        material.SetInt("NumSpheres", sphereObjects.Length);
+    }
+
 
 }

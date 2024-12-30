@@ -1,4 +1,5 @@
 using UnityEngine;
+using static UnityEngine.Mathf;
 
 static public class ShaderHelper
 {
@@ -22,4 +23,28 @@ static public class ShaderHelper
             mat = new Material(shader);
         }
     }
+
+    /// <summary>
+    /// Create a compute buffer containing the given data (Note: data must be blittable)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="buffer"></param>
+    /// <param name="data"></param>
+    public static void CreateStructuredBuffer<T>(ref ComputeBuffer buffer, T[] data) where T : struct
+    {
+        // Cannot create 0 length buffer (not sure why?)
+        int length = Max(1, data.Length);
+        // The size (in bytes) of the given data type
+        int stride = System.Runtime.InteropServices.Marshal.SizeOf(typeof(T));
+
+        // If buffer is null, wrong size, etc., then we'll need to create a new one
+        if (buffer == null || !buffer.IsValid() || buffer.count != length || buffer.stride != stride)
+        {
+            if (buffer != null) { buffer.Release(); }
+            buffer = new ComputeBuffer(length, stride, ComputeBufferType.Structured);
+        }
+
+        buffer.SetData(data);
+    }
+
 }
