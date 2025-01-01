@@ -8,6 +8,8 @@ public class RayTracerManager : MonoBehaviour
 {
     [SerializeField] bool useShaderInSceneView;
     [SerializeField] Shader selectedShader;
+    [SerializeField] int maxBounces;
+    [SerializeField] int raysPerPixel;
 
     Material material;
 
@@ -48,7 +50,8 @@ public class RayTracerManager : MonoBehaviour
             // Set fields of the raytracing material, so that the shader can use it.
             material.SetVector("ViewParams", new Vector3(nearPlaneWidth, nearPlaneHeight, nearClipPlane));
             material.SetMatrix("CamLocalToWorldMatrix", camTransformationMatrix);
-            
+            material.SetInt("MaxBounces", maxBounces);
+            material.SetInt("RaysPerPixel", raysPerPixel);
             Graphics.Blit(null, destination, material);
         }
         else {

@@ -47,6 +47,7 @@
             struct Ray{
                 float3 origin;          // The origin of a ray as a 3d vector.
                 float3 direction;       // The direction of a ray as a 3d vector.
+                float4 colour;          // The color of the ray.
             };
 
             // Struct to determine a Hit with its properties
@@ -79,6 +80,8 @@
 
             StructuredBuffer<Sphere> Spheres;
             int NumSpheres;
+            int MaxBounces;
+            int RaysPerPixel;
 
             // The Vertex-Shader
             v2f vert(appdata_t v)
@@ -94,20 +97,21 @@
                 Sphere hittedSphere;
             };
 
+
+
             RayHit HitSphere(Ray ray, Sphere sphere) {
-                RayHit rayHit;
-                rayHit.isHit = false;
+                RayHit rayHit = (RayHit)0;
 
                 // Vector from ray origin to sphere center
                 float3 oc = ray.origin - sphere.center;
 
                 // Quadratic coefficients
                 float a = dot(ray.direction, ray.direction);
-                float b = 2.0f * dot(oc, ray.direction);
-                float c = dot(oc, oc) - (sphere.radius * sphere.radius);
+                float b = 2 * dot(oc, ray.direction);
+                float c = dot(oc, oc) - sphere.radius * sphere.radius;
 
                 // Discriminant
-                float discriminant = b * b - 4.0f * a * c;
+                float discriminant = b * b - 4 * a * c;
 
                 if (discriminant < 0) {
                     return rayHit; // No intersection
@@ -116,10 +120,12 @@
                 float t = (-b - sqrt(discriminant)) / (2 * a);
 
                 // Populate RayHit
-                rayHit.isHit = true;
-                rayHit.distance = t;
-                rayHit.hitPoint = ray.origin + t * ray.direction;
-                rayHit.normalVector = normalize(rayHit.hitPoint - sphere.center);
+                if(t >= 0){
+                    rayHit.isHit = true;
+                    rayHit.distance = t;
+                    rayHit.hitPoint = ray.origin + ray.direction * t;
+                    rayHit.normalVector = normalize(rayHit.hitPoint - sphere.center);
+                }
                 return rayHit;
             }
 
@@ -146,10 +152,92 @@
                 return closestHit;                                                      // Returns the Hitinformation of the hit with the closest distance.
             }
 
+
+
+            // Function to return next random numbr
+			uint NextRandom(inout uint state)
+			{
+				state = state * 747796405 + 2891336453;
+				uint result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737;
+				result = (result >> 22) ^ result;
+				return result;
+			}
+
+            // Function to return random Value
+			float RandomValue(inout uint state)
+			{
+				return NextRandom(state) / 4294967295.0; // 2^32 - 1
+			}
+
+            // Box-Muller method to generate normally distributed random numbers
+			float RandomValueNormalDistribution(inout uint state)
+			{
+				// Thanks to https://stackoverflow.com/a/6178290
+				float theta = 2 * 3.1415926 * RandomValue(state);
+				float rho = sqrt(-2 * log(RandomValue(state)));
+				return rho * cos(theta);
+			}
+
+			// Calculate a random direction
+			float3 RandomDirection(inout uint state)
+			{
+				// Thanks to https://math.stackexchange.com/a/1585996
+				float x = RandomValueNormalDistribution(state);
+				float y = RandomValueNormalDistribution(state);
+				float z = RandomValueNormalDistribution(state);
+				return normalize(float3(x, y, z));
+			}
+
+
+            // Function to calculate the new direction of a ray after a bounce
+            float3 CalculateNewDirection(float3 incomingRay, float3 normalVector, inout uint rngState){               
+                float3 randomDirection = RandomDirection(rngState);
+
+                float3 reflectedRay = randomDirection * sign(dot(normalVector, randomDirection));
+
+
+                return reflectedRay;
+            }
+
+
+
+            float4 Trace(Ray ray, inout uint rngState){
+                ray.colour = float4(1,1,1,1);                                                       // Set the color of the ray to white at the beginning.
+                
+                for(int bounces = 0; bounces <= MaxBounces; bounces++){
+                    ClosestHit closestHit = CalculateNearestCollision(ray);
+                    if(!closestHit.hitInformation.isHit){                                           // Checks if the ray has hit something or not.
+                        return float4(0,0,0,0);                                                     // Returns Black if the ray hitted nothing.
+                    }       
+                    if(closestHit.hittedSphere.material.emissionStrength > 0){                      // Checks if the object is a light source.
+                        float4 lightSourceColour = closestHit.hittedSphere.material.emissionColour 
+                        * closestHit.hittedSphere.material.emissionStrength;                        // Calculate the emmision color and strength.
+                        return ray.colour * lightSourceColour;                                      // Returns the ray color multiplied by the color and strength of the lightsource.
+                    }
+                    else{
+                        ray.colour *= closestHit.hittedSphere.material.colour;// Multiplies the current ray color with the color of the object
+                        ray.origin = closestHit.hitInformation.hitPoint;                            // Set new origin of the ray to the hit point of the ray on last object.
+                        ray.direction =  CalculateNewDirection(ray.direction, closestHit.hitInformation.normalVector, rngState);                                    // Set the new direction in regard to th              
+                    
+                    }
+                }
+                return float4(0,0,0,0);                                                             // Returns nothing, because the bounce limit is reached.
+            }
+
+
+
             // The shader that represents the ray tracer.
-            // Returns the color value of each corresponding pixel. 
+            // Returns the color value of each corresponding pixel.
+            // Generates for each pixel a number of rays.
             float4 frag (v2f i) : SV_Target
             {
+                // Create seed for random number generator
+				uint2 numPixels = _ScreenParams.xy;
+				uint2 pixelCoord = i.uv * numPixels;
+				uint pixelIndex = pixelCoord.y * numPixels.x + pixelCoord.x;
+				uint rngState = pixelIndex * 719393;
+
+
                 float3 viewPointLocal = float3(i.uv - 0.5, 1) * ViewParams;
                 float3 viewPoint = mul(CamLocalToWorldMatrix, float4(viewPointLocal, 1));
 
@@ -157,13 +245,12 @@
                 ray.origin = _WorldSpaceCameraPos;
                 ray.direction = normalize(viewPoint - ray.origin);
 
-                ClosestHit closestHit = CalculateNearestCollision(ray);          
-                if (closestHit.hitInformation.isHit) {
-                    return closestHit.hittedSphere.material.colour; 
-                } else {
-                    return float4(0, 0, 0, 1);
+                float4 pixel = 0;
+                for ( int rayNr = 0; rayNr < RaysPerPixel; rayNr++ ){
+                    pixel += Trace(ray, rngState);
                 }
-
+                    
+                return pixel;
             }
             ENDCG
         }
