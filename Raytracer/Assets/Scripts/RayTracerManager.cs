@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using static UnityEngine.Mathf;
 
@@ -11,6 +12,12 @@ public class RayTracerManager : MonoBehaviour
     Material material;
 
     ComputeBuffer sphereBuffer;
+
+    /// <summary>
+    /// Function to send the data to the shader and render the picture with the new selected shader e.g. the raytracer.
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="destination"></param>
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         Camera cam = Camera.current;
@@ -49,6 +56,11 @@ public class RayTracerManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Adopted from Sebastian League project.
+    /// Function to Create the Spheres from the buffer transfered from the unity engine.
+    /// Sends the SPheres to the shader, where the shader can work with it.
+    /// </summary>
     void CreateSpheres()
     {
         RayTracedSphere[] sphereObjects = FindObjectsByType<RayTracedSphere>(FindObjectsSortMode.None);
@@ -69,6 +81,5 @@ public class RayTracerManager : MonoBehaviour
         material.SetBuffer("Spheres", sphereBuffer);
         material.SetInt("NumSpheres", sphereObjects.Length);
     }
-
 
 }

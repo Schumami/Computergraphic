@@ -216,7 +216,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!21 &1068178401
+--- !u!21 &1458757522
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
@@ -352,7 +352,7 @@ MonoBehaviour:
     smoothness: 0
     specularProbability: 1
     flag: 0
-  materialObjectID: -56114
+  materialObjectID: 35768
   materialInitFlag: 1
 --- !u!135 &1877639382
 SphereCollider:
@@ -398,7 +398,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1068178401}
+  - {fileID: 1458757522}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

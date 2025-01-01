@@ -4,6 +4,7 @@ using static UnityEngine.Mathf;
 static public class ShaderHelper
 {
     /// <summary>
+    /// Adopted from Sebastian League project.
     /// Function to ensure that materials are initialized with shaders consistently and efficiently, e.g. B. when dynamically creating objects or loading assets.
     /// A material is always initialized with the correct shader.
     /// A default shader is used if none is specified.
@@ -25,6 +26,7 @@ static public class ShaderHelper
     }
 
     /// <summary>
+    /// Adopted from Sebastian League project.
     /// Create a compute buffer containing the given data (Note: data must be blittable)
     /// </summary>
     /// <typeparam name="T"></typeparam>
