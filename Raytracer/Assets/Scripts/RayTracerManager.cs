@@ -11,9 +11,17 @@ public class RayTracerManager : MonoBehaviour
     [SerializeField] int maxBounces;
     [SerializeField] int raysPerPixel;
 
+    [SerializeField] int frameNumber;
+
     Material material;
 
     ComputeBuffer sphereBuffer;
+
+    RenderTexture prevFrame;
+
+    private void Start()
+    {
+    }
 
     /// <summary>
     /// Function to send the data to the shader and render the picture with the new selected shader e.g. the raytracer.
@@ -23,6 +31,7 @@ public class RayTracerManager : MonoBehaviour
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         Camera cam = Camera.current;
+        
 
         if (cam.name != "SceneCamera" || useShaderInSceneView)
         {
@@ -45,14 +54,23 @@ public class RayTracerManager : MonoBehaviour
              * H    |    0    0     0       1       |
              *      └                               ┘
              */
-            Matrix4x4 camTransformationMatrix = cam.transform.localToWorldMatrix; 
+            Matrix4x4 camTransformationMatrix = cam.transform.localToWorldMatrix;
+
+            frameNumber = Time.frameCount;
+            prevFrame = RenderTexture.GetTemporary(source.width, source.height);
+
 
             // Set fields of the raytracing material, so that the shader can use it.
             material.SetVector("ViewParams", new Vector3(nearPlaneWidth, nearPlaneHeight, nearClipPlane));
             material.SetMatrix("CamLocalToWorldMatrix", camTransformationMatrix);
             material.SetInt("MaxBounces", maxBounces);
             material.SetInt("RaysPerPixel", raysPerPixel);
+            material.SetTexture("PreviousFrame", prevFrame);
+            material.SetInt("FrameNumber", frameNumber);
+
+
             Graphics.Blit(null, destination, material);
+            RenderTexture.ReleaseTemporary(prevFrame);
         }
         else {
             Graphics.Blit(source, destination);

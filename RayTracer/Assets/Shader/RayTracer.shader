@@ -82,6 +82,8 @@
             int NumSpheres;
             int MaxBounces;
             int RaysPerPixel;
+            sampler2D PreviousFrame;
+            int FrameNumber;
 
             // The Vertex-Shader
             v2f vert(appdata_t v)
@@ -207,21 +209,28 @@
                 for(int bounces = 0; bounces <= MaxBounces; bounces++){
                     ClosestHit closestHit = CalculateNearestCollision(ray);
                     if(!closestHit.hitInformation.isHit){                                           // Checks if the ray has hit something or not.
-                        return float4(0,0,0,0);                                                     // Returns Black if the ray hitted nothing.
+                    // Returns a little bit of light for a smooth background lightning
+                        return float4(0,0,0,0);
                     }       
                     if(closestHit.hittedSphere.material.emissionStrength > 0){                      // Checks if the object is a light source.
-                        float4 lightSourceColour = closestHit.hittedSphere.material.emissionColour 
-                        * closestHit.hittedSphere.material.emissionStrength;                        // Calculate the emmision color and strength.
-                        return ray.colour * lightSourceColour;                                      // Returns the ray color multiplied by the color and strength of the lightsource.
+                        float4 lightSourceColour = closestHit.hittedSphere.material.emissionColour; // Calculate the emmision color.
+                        
+                        float angleStreangth = dot(closestHit.hitInformation.normalVector, -ray.direction);
+                        float lightStrenght = closestHit.hittedSphere.material.emissionStrength * angleStreangth;                                                         // Calculate the emmision strenght.
+                        
+                        
+                        
+                        return (ray.colour * lightSourceColour) * lightStrenght;                                      // Returns the ray color multiplied by the color and strength of the lightsource.
                     }
                     else{
-                        ray.colour *= closestHit.hittedSphere.material.colour;// Multiplies the current ray color with the color of the object
+                        ray.colour *= closestHit.hittedSphere.material.colour;                      // Multiplies the current ray color with the color of the object
                         ray.origin = closestHit.hitInformation.hitPoint;                            // Set new origin of the ray to the hit point of the ray on last object.
                         ray.direction =  CalculateNewDirection(ray.direction, closestHit.hitInformation.normalVector, rngState);                                    // Set the new direction in regard to th              
                     
                     }
                 }
-                return float4(0,0,0,0);                                                             // Returns nothing, because the bounce limit is reached.
+                return 0;
+                //return ray.colour * float4(0.001,0.001,0.001,0.001);                                                           // Returns nothing, because the bounce limit is reached.
             }
 
 
@@ -235,7 +244,9 @@
 				uint2 numPixels = _ScreenParams.xy;
 				uint2 pixelCoord = i.uv * numPixels;
 				uint pixelIndex = pixelCoord.y * numPixels.x + pixelCoord.x;
-				uint rngState = pixelIndex * 719393;
+				uint rngState = pixelIndex * 475689 * FrameNumber;
+                
+                float4 lastPixel = tex2D(PreviousFrame, i.uv);
 
 
                 float3 viewPointLocal = float3(i.uv - 0.5, 1) * ViewParams;
@@ -249,8 +260,8 @@
                 for ( int rayNr = 0; rayNr < RaysPerPixel; rayNr++ ){
                     pixel += Trace(ray, rngState);
                 }
-                    
-                return pixel;
+                
+                return (pixel*10 + lastPixel*90)/100;                 // Calculate the average between frames.
             }
             ENDCG
         }

@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   material:
-    colour: {r: 0.20833349, g: 0, b: 1, a: 1}
+    colour: {r: 0.005965079, g: 0.028301895, b: 0, a: 1}
     emissionColour: {r: 1, g: 1, b: 1, a: 1}
     specularColour: {r: 1, g: 1, b: 1, a: 1}
     emissionStrength: 0
@@ -286,7 +286,7 @@ MonoBehaviour:
     colour: {r: 0, g: 0, b: 0, a: 1}
     emissionColour: {r: 1, g: 1, b: 1, a: 1}
     specularColour: {r: 1, g: 1, b: 1, a: 1}
-    emissionStrength: 0.127
+    emissionStrength: 1
     smoothness: 0
     specularProbability: 1
     flag: 0
@@ -375,7 +375,7 @@ Transform:
   m_GameObject: {fileID: 415219781}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.809, y: -5.578, z: -6.19}
+  m_LocalPosition: {x: -1.809, y: -4, z: -3.15}
   m_LocalScale: {x: 4.5208116, y: 4.5208116, z: 4.5208116}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -414,7 +414,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   material:
-    colour: {r: 0.057249546, g: 0, b: 1, a: 1}
+    colour: {r: 1, g: 0.8518007, b: 0, a: 1}
     emissionColour: {r: 1, g: 1, b: 1, a: 1}
     specularColour: {r: 1, g: 1, b: 1, a: 1}
     emissionStrength: 0
@@ -637,7 +637,7 @@ Transform:
   m_GameObject: {fileID: 1541070478}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.1108613, y: -5.406, z: 4.299389}
+  m_LocalPosition: {x: -1.1108613, y: -5.406, z: 4.415}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -807,8 +807,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useShaderInSceneView: 1
   selectedShader: {fileID: 4800000, guid: 0b291a9125d5b904e9d2b9eda3549fda, type: 3}
-  maxBounces: 51
-  raysPerPixel: 196
+  maxBounces: 12
+  raysPerPixel: 100
+  frameNumber: 4913
 --- !u!81 &2095703066
 AudioListener:
   m_ObjectHideFlags: 0
