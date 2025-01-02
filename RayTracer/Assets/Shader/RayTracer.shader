@@ -204,33 +204,26 @@
 
 
             float4 Trace(Ray ray, inout uint rngState){
-                ray.colour = float4(1,1,1,1);                                                       // Set the color of the ray to white at the beginning.
+                ray.colour = float4(1,1,1,1);                                                                                   // Set the color of the ray to white at the beginning.
                 
                 for(int bounces = 0; bounces <= MaxBounces; bounces++){
                     ClosestHit closestHit = CalculateNearestCollision(ray);
-                    if(!closestHit.hitInformation.isHit){                                           // Checks if the ray has hit something or not.
-                    // Returns a little bit of light for a smooth background lightning
+                    if(!closestHit.hitInformation.isHit){                                                                       // Checks if the ray has hit something or not.
                         return float4(0,0,0,0);
                     }       
-                    if(closestHit.hittedSphere.material.emissionStrength > 0){                      // Checks if the object is a light source.
-                        float4 lightSourceColour = closestHit.hittedSphere.material.emissionColour; // Calculate the emmision color.
-                        
-                        float angleStreangth = dot(closestHit.hitInformation.normalVector, -ray.direction);
-                        float lightStrenght = closestHit.hittedSphere.material.emissionStrength * angleStreangth;                                                         // Calculate the emmision strenght.
-                        
-                        
-                        
-                        return (ray.colour * lightSourceColour) * lightStrenght;                                      // Returns the ray color multiplied by the color and strength of the lightsource.
+                    if(closestHit.hittedSphere.material.emissionStrength > 0){                                                  // Checks if the object is a light source.
+                        float4 lightSourceColour = closestHit.hittedSphere.material.emissionColour;                             // Calculate the emmision color.
+                        float lightStrenght = closestHit.hittedSphere.material.emissionStrength;                                // Calculate the emmision strenght.
+                        return (ray.colour * lightSourceColour) * lightStrenght;                                                // Returns the ray color multiplied by the color and strength of the lightsource.
                     }
                     else{
-                        ray.colour *= closestHit.hittedSphere.material.colour;                      // Multiplies the current ray color with the color of the object
-                        ray.origin = closestHit.hitInformation.hitPoint;                            // Set new origin of the ray to the hit point of the ray on last object.
-                        ray.direction =  CalculateNewDirection(ray.direction, closestHit.hitInformation.normalVector, rngState);                                    // Set the new direction in regard to th              
-                    
+                        ray.origin = closestHit.hitInformation.hitPoint;                                                        // Set new origin of the ray to the hit point of the ray on last object.
+                        ray.direction =  CalculateNewDirection(ray.direction, closestHit.hitInformation.normalVector, rngState);// Set the new direction in regard to th              
+                        float lightningEfficiency = dot(closestHit.hitInformation.normalVector, ray.direction);                 // Calculate the lightning efficiency by looking for the angle
+                        ray.colour *= closestHit.hittedSphere.material.colour * lightningEfficiency*2;                          // Multiplies the current ray color with the color of the object
                     }
                 }
-                return 0;
-                //return ray.colour * float4(0.001,0.001,0.001,0.001);                                                           // Returns nothing, because the bounce limit is reached.
+                return 0;                                                                                                       // Returns nothing, because the bounce limit is reached.
             }
 
 
@@ -260,6 +253,7 @@
                 for ( int rayNr = 0; rayNr < RaysPerPixel; rayNr++ ){
                     pixel += Trace(ray, rngState);
                 }
+                
                 
                 return (pixel*10 + lastPixel*90)/100;                 // Calculate the average between frames.
             }

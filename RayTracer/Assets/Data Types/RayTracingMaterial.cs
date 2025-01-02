@@ -13,7 +13,7 @@ public struct RayTracingMaterial
 	public Color colour;
 	public Color emissionColour;
 	public Color specularColour;
-    [Range(0, 1)] public float emissionStrength;
+    [Range(0, 2)] public float emissionStrength;
 	[Range(0, 1)] public float smoothness;
 	[Range(0, 1)] public float specularProbability;
 	public MaterialFlag flag;
