@@ -192,13 +192,16 @@
 
 
             // Function to calculate the new direction of a ray after a bounce
-            float3 CalculateNewDirection(float3 incomingRay, float3 normalVector, inout uint rngState){               
+            float3 CalculateNewDirection(float3 incomingRay, float3 normalVector, inout uint rngState, float smoothness){               
                 float3 randomDirection = RandomDirection(rngState);
+                float3 totalReflectedRay = reflect(incomingRay, normalVector);
+                float3 randomReflectedRay = randomDirection * sign(dot(normalVector, randomDirection));
+                float randomvalue = RandomValue(rngState);
 
-                float3 reflectedRay = randomDirection * sign(dot(normalVector, randomDirection));
-
-
-                return reflectedRay;
+                if(randomvalue > smoothness){
+                    return randomReflectedRay;
+                    }
+                else return totalReflectedRay;
             }
 
 
@@ -218,7 +221,11 @@
                     }
                     else{
                         ray.origin = closestHit.hitInformation.hitPoint;                                                        // Set new origin of the ray to the hit point of the ray on last object.
-                        ray.direction =  CalculateNewDirection(ray.direction, closestHit.hitInformation.normalVector, rngState);// Set the new direction in regard to th              
+                        ray.direction =  CalculateNewDirection(                                                                 // Set the new direction in regard to the smoothness, normalvector and incoming ray
+                            ray.direction, 
+                            closestHit.hitInformation.normalVector, 
+                            rngState, 
+                            closestHit.hittedSphere.material.smoothness);       
                         float lightningEfficiency = dot(closestHit.hitInformation.normalVector, ray.direction);                 // Calculate the lightning efficiency by looking for the angle
                         ray.colour *= closestHit.hittedSphere.material.colour * lightningEfficiency*2;                          // Multiplies the current ray color with the color of the object
                     }
